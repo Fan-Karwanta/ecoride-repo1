@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "Ride App",
+    "slug": "rideapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/ecoride_logo1.png",
+    "scheme": "myapp",
+    "newArchEnabled": true,
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./src/assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.eco.rideapp",
+      "config": {
+                "googleMapsApiKey": "AIzaSyCoTMyfFvB0JOpI1zxhzKmxfcGX1vhiZG4"
+            }
+    },
+    "android": {
+      "config": {
+                "googleMaps": {
+                    "apiKey": "AIzaSyCoTMyfFvB0JOpI1zxhzKmxfcGX1vhiZG4"
+                }
+            },
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/ecoride_logo1.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.eco.rideapp"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./src/assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
