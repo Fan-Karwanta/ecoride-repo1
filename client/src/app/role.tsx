@@ -31,7 +31,7 @@ const Role = () => {
         <View style={roleStyles.cardContent}>
           <CustomText style={roleStyles.title}>Passenger</CustomText>
           <CustomText style={roleStyles.description}>
-            Are you a passenger? Order rides and deliveries easily.
+            Are you a passenger? Order rides easily.
           </CustomText>
         </View>
       </TouchableOpacity>
