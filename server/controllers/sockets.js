@@ -2,6 +2,7 @@ import geolib from "geolib";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Ride from "../models/Ride.js";
+import Rating from "../models/Rating.js";
 
 const onDutyRiders = new Map();
 
@@ -71,20 +72,30 @@ const handleSocketConnection = (io) => {
             return socket.emit("error", { message: "Driver ID is required" });
           }
           
-          const driver = await User.findById(riderId).select("firstName lastName phone rating vehicleType licenseId");
+          const driver = await User.findById(riderId).select("firstName lastName phone licenseId _id");
           
           if (!driver) {
             return socket.emit("error", { message: "Driver not found" });
           }
           
+          // Get driver's ratings
+          const ratings = await Rating.find({ rider: riderId });
+          
+          // Calculate average rating
+          const totalRatings = ratings.length;
+          const sumRatings = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+          const averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : "0.0";
+          
           // Send driver details back to the customer
           socket.emit("driverDetailsResponse", {
+            _id: driver._id,
             firstName: driver.firstName,
             lastName: driver.lastName,
             phone: driver.phone,
             licenseId: driver.licenseId,
-            rating: driver.rating || 4.5, // Default rating if not available
-            vehicleType: driver.vehicleType || "auto" // Default vehicle type if not available
+            averageRating: averageRating,
+            totalRatings: totalRatings,
+            vehicleType: onDutyRiders.get(riderId)?.vehicleType || "auto" // Get vehicle type from onDuty data
           });
           
           console.log(`Sent driver ${riderId} details to customer ${user.id}`);

@@ -12,6 +12,7 @@ import authMiddleware from './middleware/authentication.js';
 // Routers
 import authRouter from './routes/auth.js';
 import rideRouter from './routes/ride.js';
+import ratingRouter from './routes/rating.js';
 
 // Import socket handler
 import handleSocketConnection from './controllers/sockets.js';
@@ -39,6 +40,7 @@ handleSocketConnection(io);
 // Routes
 app.use("/auth", authRouter);
 app.use("/ride", authMiddleware, rideRouter);
+app.use("/rating", authMiddleware, ratingRouter);
 
 // Middleware
 app.use(notFoundMiddleware);

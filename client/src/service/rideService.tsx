@@ -83,3 +83,51 @@ export const getRideHistory = async (status?: string) => {
     return [];
   }
 };
+
+// Rating related functions
+export const submitRating = async (rideId: string, rating: number, comment?: string) => {
+  try {
+    const res = await api.post('/rating/create', {
+      rideId,
+      rating,
+      comment
+    });
+    return { success: true, data: res.data };
+  } catch (error: any) {
+    console.log("Error: Submit Rating ", error);
+    Alert.alert("Error", "Failed to submit rating");
+    return { success: false, error };
+  }
+};
+
+export const checkRideRating = async (rideId: string) => {
+  try {
+    const res = await api.get(`/rating/check/${rideId}`);
+    return { rated: res.data.rated, rating: res.data.rating };
+  } catch (error: any) {
+    console.log("Error: Check Ride Rating ", error);
+    return { rated: false, rating: null };
+  }
+};
+
+export const getRiderRatings = async (riderId: string) => {
+  try {
+    const res = await api.get(`/rating/rider/${riderId}`);
+    return res.data;
+  } catch (error: any) {
+    console.log("Error: Get Rider Ratings ", error);
+    Alert.alert("Error", "Failed to fetch rider ratings");
+    return { count: 0, averageRating: 0, ratings: [] };
+  }
+};
+
+export const getMyRatings = async () => {
+  try {
+    const res = await api.get('/rating/my-ratings');
+    return res.data;
+  } catch (error: any) {
+    console.log("Error: Get My Ratings ", error);
+    Alert.alert("Error", "Failed to fetch your ratings");
+    return { count: 0, averageRating: 0, ratings: [] };
+  }
+};

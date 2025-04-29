@@ -149,7 +149,7 @@ const RiderRideHistory = () => {
         <FlatList
           data={filteredRides}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <RideHistoryItem ride={item} />}
+          renderItem={({ item }) => <RideHistoryItem ride={item} isRider={true} />}
           contentContainerStyle={styles.listContent}
         />
       )}

@@ -9,6 +9,7 @@ import CustomText from "@/components/shared/CustomText";
 import CustomInput from "@/components/shared/CustomInput";
 import { getUserProfile, updateUserProfile } from "@/service/authService";
 import { useRiderStore } from "@/store/riderStore";
+import RatingsTab from "@/components/rider/RatingsTab";
 
 interface ProfileData {
   firstName: string;
@@ -24,6 +25,7 @@ const RiderProfilePage = () => {
   const { user } = useRiderStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "ratings">("profile");
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: "",
     middleName: "",
@@ -100,11 +102,50 @@ const RiderProfilePage = () => {
         </CustomText>
       </View>
 
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "profile" && styles.activeTabButton,
+          ]}
+          onPress={() => setActiveTab("profile")}
+        >
+          <CustomText
+            fontFamily={activeTab === "profile" ? "Bold" : "Medium"}
+            fontSize={14}
+            style={[
+              styles.tabButtonText,
+              activeTab === "profile" && styles.activeTabButtonText,
+            ]}
+          >
+            Profile
+          </CustomText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "ratings" && styles.activeTabButton,
+          ]}
+          onPress={() => setActiveTab("ratings")}
+        >
+          <CustomText
+            fontFamily={activeTab === "ratings" ? "Bold" : "Medium"}
+            fontSize={14}
+            style={[
+              styles.tabButtonText,
+              activeTab === "ratings" && styles.activeTabButtonText,
+            ]}
+          >
+            Ratings
+          </CustomText>
+        </TouchableOpacity>
+      </View>
+
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      ) : (
+      ) : activeTab === "profile" ? (
         <ScrollView style={styles.content}>
           <View style={styles.profileImageContainer}>
             <View style={styles.profileImage}>
@@ -222,6 +263,8 @@ const RiderProfilePage = () => {
             )}
           </View>
         </ScrollView>
+      ) : (
+        <RatingsTab />
       )}
     </View>
   );
@@ -247,6 +290,27 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     marginRight: 40,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#F5F5F5",
+    marginBottom: 10,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  activeTabButton: {
+    borderBottomColor: Colors.primary,
+  },
+  tabButtonText: {
+    color: "#757575",
+  },
+  activeTabButtonText: {
+    color: Colors.primary,
   },
   loadingContainer: {
     flex: 1,

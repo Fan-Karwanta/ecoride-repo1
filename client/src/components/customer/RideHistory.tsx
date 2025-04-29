@@ -72,6 +72,7 @@ const RideHistory: React.FC<RideHistoryProps> = ({ activeTab = 'all' }) => {
             <RideHistoryItem 
               ride={item} 
               onPress={() => handleRidePress(item._id)}
+              isRider={false}
             />
           )}
           contentContainerStyle={styles.listContent}

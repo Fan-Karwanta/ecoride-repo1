@@ -1,9 +1,10 @@
-import React, { FC } from 'react';
-import { View, Modal, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { FC, useState, useEffect } from 'react';
+import { View, Modal, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { RFValue } from 'react-native-responsive-fontsize';
 import CustomText from '../shared/CustomText';
 import { Colors } from '@/utils/Constants';
+import RiderRatingCard from './RiderRatingCard';
 
 interface DriverDetailsModalProps {
   visible: boolean;
@@ -16,6 +17,8 @@ const DriverDetailsModal: FC<DriverDetailsModalProps> = ({
   driverDetails,
   onClose,
 }) => {
+  const [showRatings, setShowRatings] = useState(false);
+
   if (!driverDetails) return null;
 
   const getVehicleTypeLabel = (type: string) => {
@@ -51,7 +54,7 @@ const DriverDetailsModal: FC<DriverDetailsModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <ScrollView style={styles.modalContent}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Ionicons name="close" size={RFValue(24)} color={Colors.text} />
           </TouchableOpacity>
@@ -103,20 +106,32 @@ const DriverDetailsModal: FC<DriverDetailsModalProps> = ({
               </View>
             </View>
 
-            {driverDetails.rating && (
-              <View style={styles.infoRow}>
-                <MaterialIcons name="star-rate" size={RFValue(18)} color={Colors.primary} style={styles.icon} />
-                <View>
-                  <CustomText fontFamily="Medium" fontSize={16} style={styles.label}>
-                    Rating
-                  </CustomText>
-                  <CustomText fontSize={14} style={styles.value}>
-                    {driverDetails.rating} / 5
-                  </CustomText>
-                </View>
+            <TouchableOpacity 
+              style={styles.ratingsButton}
+              onPress={() => setShowRatings(!showRatings)}
+            >
+              <View style={styles.ratingsButtonContent}>
+                <MaterialIcons name="star-rate" size={RFValue(18)} color={Colors.primary} />
+                <CustomText fontFamily="Medium" fontSize={16} style={styles.ratingsButtonText}>
+                  View Driver Ratings
+                </CustomText>
               </View>
-            )}
+              <Ionicons 
+                name={showRatings ? "chevron-up" : "chevron-down"} 
+                size={RFValue(16)} 
+                color={Colors.primary} 
+              />
+            </TouchableOpacity>
           </View>
+
+          {showRatings && driverDetails._id && (
+            <View style={styles.ratingsContainer}>
+              <RiderRatingCard 
+                riderId={driverDetails._id} 
+                riderName={`${driverDetails.firstName} ${driverDetails.lastName}`}
+              />
+            </View>
+          )}
 
           <TouchableOpacity style={styles.callButton}>
             <Ionicons name="call" size={RFValue(18)} color="#fff" />
@@ -124,7 +139,7 @@ const DriverDetailsModal: FC<DriverDetailsModalProps> = ({
               Call Driver
             </CustomText>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -141,7 +156,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    paddingBottom: 40,
+    maxHeight: '80%',
   },
   closeButton: {
     alignSelf: 'flex-end',
@@ -181,6 +196,26 @@ const styles = StyleSheet.create({
   value: {
     color: '#666',
   },
+  ratingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  ratingsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingsButtonText: {
+    color: Colors.primary,
+    marginLeft: 10,
+  },
+  ratingsContainer: {
+    marginBottom: 20,
+  },
   callButton: {
     backgroundColor: Colors.primary,
     flexDirection: 'row',
@@ -189,6 +224,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginTop: 10,
+    marginBottom: 30,
   },
   callButtonText: {
     color: '#fff',

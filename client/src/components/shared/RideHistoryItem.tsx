@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Colors } from '@/utils/Constants';
 import CustomText from './CustomText';
 import { formatDate } from '@/utils/Helpers';
+import RatingModal from '@/components/customer/RatingModal';
+import { checkRideRating } from '@/service/rideService';
 
 interface RideHistoryItemProps {
   ride: {
@@ -26,6 +28,7 @@ interface RideHistoryItemProps {
     rider: {
       name: string;
       phone: string;
+      _id?: string;
     } | null;
     createdAt: string;
   };
@@ -77,10 +80,33 @@ const getStatusText = (status: string) => {
 };
 
 const RideHistoryItem: React.FC<RideHistoryItemProps> = ({ ride, onPress, isRider = false }) => {
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
   const formattedDate = formatDate(new Date(ride.createdAt));
   const vehicleIcon = getVehicleIcon(ride.vehicle);
   const statusColor = getStatusColor(ride.status);
   const statusText = getStatusText(ride.status);
+  
+  // Check if the ride has already been rated
+  useEffect(() => {
+    if (!isRider && ride.status === 'COMPLETED' && ride._id) {
+      checkIfRideRated();
+    }
+  }, [ride._id, isRider, ride.status]);
+
+  const checkIfRideRated = async () => {
+    try {
+      setLoading(true);
+      const result = await checkRideRating(ride._id);
+      setHasRated(result.rated);
+    } catch (error) {
+      console.error('Error checking if ride is rated:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Format vehicle name for display
   const getVehicleName = (vehicle: string) => {
@@ -98,71 +124,120 @@ const RideHistoryItem: React.FC<RideHistoryItemProps> = ({ ride, onPress, isRide
     }
   };
 
+  const handleRateRide = (e: any) => {
+    e.stopPropagation();
+    setRatingModalVisible(true);
+  };
+
+  // Determine if we should show the rate button
+  const shouldShowRateButton = !isRider && ride.status === 'COMPLETED' && ride.rider && !hasRated;
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      <View style={styles.iconContainer}>
-        <Ionicons name={vehicleIcon} size={RFValue(24)} color={Colors.primary} />
-      </View>
-      
-      <View style={styles.contentContainer}>
-        <View style={styles.headerRow}>
-          <CustomText fontFamily="Medium" fontSize={16}>
-            {getVehicleName(ride.vehicle)}
-          </CustomText>
-          <CustomText fontFamily="Medium" fontSize={14} style={{ color: statusColor }}>
-            {statusText}
-          </CustomText>
+    <>
+      <TouchableOpacity style={styles.container} onPress={onPress}>
+        <View style={styles.iconContainer}>
+          <Ionicons name={vehicleIcon} size={RFValue(24)} color={Colors.primary} />
         </View>
         
-        <View style={styles.locationContainer}>
-          <View style={styles.locationRow}>
-            <View style={styles.dotStart} />
-            <CustomText fontFamily="Regular" fontSize={12} numberOfLines={1} style={styles.locationText}>
-              {ride.pickup.address}
+        <View style={styles.contentContainer}>
+          <View style={styles.headerRow}>
+            <CustomText fontFamily="Medium" fontSize={16}>
+              {getVehicleName(ride.vehicle)}
+            </CustomText>
+            <CustomText fontFamily="Medium" fontSize={14} style={{ color: statusColor }}>
+              {statusText}
             </CustomText>
           </View>
           
-          <View style={styles.locationDivider} />
-          
-          <View style={styles.locationRow}>
-            <View style={styles.dotEnd} />
-            <CustomText fontFamily="Regular" fontSize={12} numberOfLines={1} style={styles.locationText}>
-              {ride.drop.address}
-            </CustomText>
-          </View>
-        </View>
-        
-        <View style={styles.footerRow}>
-          <CustomText fontFamily="Regular" fontSize={12} style={styles.dateText}>
-            {formattedDate}
-          </CustomText>
-          
-          <View style={styles.detailsContainer}>
-            <View style={styles.detailItem}>
-              <CustomText fontFamily="Regular" fontSize={12}>
-                {ride.distance.toFixed(1)} km
+          <View style={styles.locationContainer}>
+            <View style={styles.locationRow}>
+              <View style={styles.dotStart} />
+              <CustomText fontFamily="Regular" fontSize={12} numberOfLines={1} style={styles.locationText}>
+                {ride.pickup.address}
               </CustomText>
             </View>
             
-            <View style={styles.detailItem}>
-              <CustomText fontFamily="Medium" fontSize={12}>
-                ₱{ride.fare.toFixed(2)}
+            <View style={styles.locationDivider} />
+            
+            <View style={styles.locationRow}>
+              <View style={styles.dotEnd} />
+              <CustomText fontFamily="Regular" fontSize={12} numberOfLines={1} style={styles.locationText}>
+                {ride.drop.address}
               </CustomText>
             </View>
           </View>
+          
+          <View style={styles.footerRow}>
+            <CustomText fontFamily="Regular" fontSize={12} style={styles.dateText}>
+              {formattedDate}
+            </CustomText>
+            
+            <View style={styles.detailsContainer}>
+              <View style={styles.detailItem}>
+                <CustomText fontFamily="Regular" fontSize={12}>
+                  {ride.distance.toFixed(1)} km
+                </CustomText>
+              </View>
+              
+              <View style={styles.detailItem}>
+                <CustomText fontFamily="Medium" fontSize={12}>
+                  ₱{ride.fare.toFixed(2)}
+                </CustomText>
+              </View>
+            </View>
+          </View>
+          
+          {isRider ? (
+            <CustomText fontFamily="Regular" fontSize={12} style={styles.personInfo}>
+              Passenger: {ride.customer.name}
+            </CustomText>
+          ) : ride.rider ? (
+            <View style={styles.riderInfoContainer}>
+              <CustomText fontFamily="Regular" fontSize={12} style={styles.personInfo}>
+                Driver: {ride.rider.name}
+              </CustomText>
+              
+              {/* Show Rate button only if the ride is completed, has a rider, and hasn't been rated yet */}
+              {shouldShowRateButton && (
+                <TouchableOpacity 
+                  style={styles.rateButton}
+                  onPress={handleRateRide}
+                >
+                  <CustomText fontFamily="Medium" fontSize={12} style={styles.rateButtonText}>
+                    Rate
+                  </CustomText>
+                  <Ionicons name="star" size={RFValue(12)} color="#FFFFFF" style={styles.rateButtonIcon} />
+                </TouchableOpacity>
+              )}
+              
+              {/* Show "Rated" badge if the ride has already been rated */}
+              {!isRider && ride.status === 'COMPLETED' && hasRated && (
+                <View style={styles.ratedBadge}>
+                  <Ionicons name="checkmark-circle" size={RFValue(12)} color="#FFFFFF" style={styles.ratedIcon} />
+                  <CustomText fontFamily="Medium" fontSize={12} style={styles.ratedText}>
+                    Rated
+                  </CustomText>
+                </View>
+              )}
+            </View>
+          ) : null}
         </View>
-        
-        {isRider ? (
-          <CustomText fontFamily="Regular" fontSize={12} style={styles.personInfo}>
-            Passenger: {ride.customer.name}
-          </CustomText>
-        ) : ride.rider ? (
-          <CustomText fontFamily="Regular" fontSize={12} style={styles.personInfo}>
-            Driver: {ride.rider.name}
-          </CustomText>
-        ) : null}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      
+      {/* Only show rating modal for customers (not riders) and only if the ride hasn't been rated yet */}
+      {!isRider && ride.rider && !hasRated && (
+        <RatingModal 
+          visible={ratingModalVisible} 
+          onClose={() => {
+            setRatingModalVisible(false);
+            // Check if the ride has been rated after closing the modal
+            checkIfRideRated();
+          }} 
+          rideId={ride._id}
+          riderName={ride.rider.name}
+        />
+      )}
+    </>
   );
 };
 
@@ -246,6 +321,42 @@ const styles = StyleSheet.create({
   personInfo: {
     marginTop: 4,
     color: '#757575', // Gray color for person info
+  },
+  riderInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  rateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  rateButtonText: {
+    color: '#FFFFFF',
+    marginRight: 4,
+  },
+  rateButtonIcon: {
+    marginLeft: 2,
+  },
+  ratedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50', // Green color for success
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  ratedText: {
+    color: '#FFFFFF',
+    marginRight: 4,
+  },
+  ratedIcon: {
+    marginRight: 4,
   },
 });
 
