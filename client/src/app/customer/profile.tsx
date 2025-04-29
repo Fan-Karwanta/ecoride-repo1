@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import { Stack, router } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { RFValue } from "react-native-responsive-fontsize";
@@ -9,6 +9,7 @@ import CustomText from "@/components/shared/CustomText";
 import CustomInput from "@/components/shared/CustomInput";
 import { getUserProfile, updateUserProfile } from "@/service/authService";
 import { useUserStore } from "@/store/userStore";
+import RideHistory from "@/components/customer/RideHistory";
 
 interface ProfileData {
   firstName: string;
@@ -17,12 +18,18 @@ interface ProfileData {
   phone: string;
   email: string;
   schoolId: string;
+  sex: string;
 }
 
 const Profile = () => {
   const { user } = useUserStore();
+  const params = useLocalSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "history">(
+    params.tab === "history" ? "history" : "profile"
+  );
+  const [historyFilter, setHistoryFilter] = useState<string>("all");
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: "",
     middleName: "",
@@ -30,6 +37,7 @@ const Profile = () => {
     phone: "",
     email: "",
     schoolId: "",
+    sex: "",
   });
 
   useEffect(() => {
@@ -47,6 +55,7 @@ const Profile = () => {
         phone: userData.phone || "",
         email: userData.email || "",
         schoolId: userData.schoolId || "",
+        sex: userData.sex || "",
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -74,32 +83,9 @@ const Profile = () => {
     }));
   };
 
-  return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={RFValue(24)} color="black" />
-        </TouchableOpacity>
-        <CustomText fontFamily="Bold" fontSize={18} style={styles.headerTitle}>
-          My Profile
-        </CustomText>
-      </View>
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
-      ) : (
+  const renderTabContent = () => {
+    if (activeTab === "profile") {
+      return (
         <ScrollView style={styles.content}>
           <View style={styles.profileImageContainer}>
             <View style={styles.profileImage}>
@@ -157,6 +143,32 @@ const Profile = () => {
               keyboardType="email-address"
               style={isEditing ? styles.inputEditable : styles.inputDisabled}
             />
+
+            <View style={styles.inputContainer}>
+              <CustomText fontFamily="Medium">Sex</CustomText>
+              {isEditing ? (
+                <View style={styles.radioContainer}>
+                  <TouchableOpacity 
+                    style={[styles.radioButton, profileData.sex === "male" && styles.radioButtonSelected]} 
+                    onPress={() => handleInputChange("sex", "male")}
+                  >
+                    <View style={[styles.radioCircle, profileData.sex === "male" && styles.radioCircleSelected]} />
+                    <CustomText fontFamily="Regular">Male</CustomText>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.radioButton, profileData.sex === "female" && styles.radioButtonSelected]} 
+                    onPress={() => handleInputChange("sex", "female")}
+                  >
+                    <View style={[styles.radioCircle, profileData.sex === "female" && styles.radioCircleSelected]} />
+                    <CustomText fontFamily="Regular">Female</CustomText>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={[styles.input, styles.inputDisabled, { justifyContent: 'center' }]}>
+                  <CustomText fontFamily="Regular">{profileData.sex || 'Not specified'}</CustomText>
+                </View>
+              )}
+            </View>
           </View>
 
           <View style={styles.buttonContainer}>
@@ -172,12 +184,9 @@ const Profile = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
-                  onPress={() => {
-                    setIsEditing(false);
-                    fetchUserProfile(); // Reset to original data
-                  }}
+                  onPress={() => setIsEditing(false)}
                 >
-                  <CustomText fontFamily="Medium" fontSize={14} style={styles.cancelButtonText}>
+                  <CustomText fontFamily="Medium" fontSize={14} style={styles.buttonText}>
                     Cancel
                   </CustomText>
                 </TouchableOpacity>
@@ -188,21 +197,157 @@ const Profile = () => {
                 onPress={() => setIsEditing(true)}
               >
                 <CustomText fontFamily="Medium" fontSize={14} style={styles.buttonText}>
-                  Edit
+                  Edit Profile
                 </CustomText>
               </TouchableOpacity>
             )}
           </View>
-
-          <TouchableOpacity
-            style={styles.backLink}
-            onPress={() => router.back()}
-          >
-            <CustomText fontFamily="Medium" fontSize={14} style={styles.backLinkText}>
-              Go back
-            </CustomText>
-          </TouchableOpacity>
         </ScrollView>
+      );
+    } else {
+      return (
+        <View style={styles.historyContainer}>
+          <View style={styles.historyFilterContainer}>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                historyFilter === "all" && styles.activeFilterButton,
+              ]}
+              onPress={() => setHistoryFilter("all")}
+            >
+              <CustomText
+                fontFamily="Medium"
+                fontSize={12}
+                style={[
+                  styles.filterButtonText,
+                  historyFilter === "all" && styles.activeFilterButtonText,
+                ]}
+              >
+                All
+              </CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                historyFilter === "COMPLETED" && styles.activeFilterButton,
+              ]}
+              onPress={() => setHistoryFilter("COMPLETED")}
+            >
+              <CustomText
+                fontFamily="Medium"
+                fontSize={12}
+                style={[
+                  styles.filterButtonText,
+                  historyFilter === "COMPLETED" && styles.activeFilterButtonText,
+                ]}
+              >
+                Completed
+              </CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                historyFilter === "SEARCHING_FOR_RIDER" && styles.activeFilterButton,
+              ]}
+              onPress={() => setHistoryFilter("SEARCHING_FOR_RIDER")}
+            >
+              <CustomText
+                fontFamily="Medium"
+                fontSize={12}
+                style={[
+                  styles.filterButtonText,
+                  historyFilter === "SEARCHING_FOR_RIDER" && styles.activeFilterButtonText,
+                ]}
+              >
+                Searching
+              </CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                (historyFilter === "START" || historyFilter === "ARRIVED") && styles.activeFilterButton,
+              ]}
+              onPress={() => setHistoryFilter("START")}
+            >
+              <CustomText
+                fontFamily="Medium"
+                fontSize={12}
+                style={[
+                  styles.filterButtonText,
+                  (historyFilter === "START" || historyFilter === "ARRIVED") && styles.activeFilterButtonText,
+                ]}
+              >
+                Active
+              </CustomText>
+            </TouchableOpacity>
+          </View>
+          <RideHistory activeTab={historyFilter} />
+        </View>
+      );
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={RFValue(24)} color="black" />
+        </TouchableOpacity>
+        <CustomText fontFamily="Bold" fontSize={18} style={styles.headerTitle}>
+          My Profile
+        </CustomText>
+      </View>
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "profile" && styles.activeTab]}
+          onPress={() => setActiveTab("profile")}
+        >
+          <CustomText
+            fontFamily="Medium"
+            fontSize={14}
+            style={[
+              styles.tabText,
+              activeTab === "profile" && styles.activeTabText,
+            ]}
+          >
+            Profile
+          </CustomText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "history" && styles.activeTab]}
+          onPress={() => setActiveTab("history")}
+          testID="history-tab"
+        >
+          <CustomText
+            fontFamily="Medium"
+            fontSize={14}
+            style={[
+              styles.tabText,
+              activeTab === "history" && styles.activeTabText,
+            ]}
+          >
+            Ride History
+          </CustomText>
+        </TouchableOpacity>
+      </View>
+
+      {isLoading && activeTab === "profile" ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        renderTabContent()
       )}
     </View>
   );
@@ -218,9 +363,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 50,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    paddingBottom: 10,
+    backgroundColor: "#FFFFFF",
   },
   backButton: {
     padding: 8,
@@ -241,12 +385,12 @@ const styles = StyleSheet.create({
   },
   profileImageContainer: {
     alignItems: "center",
-    marginVertical: 20,
+    marginBottom: 20,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: RFValue(100),
+    height: RFValue(100),
+    borderRadius: RFValue(50),
     backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
@@ -254,23 +398,36 @@ const styles = StyleSheet.create({
   formContainer: {
     marginBottom: 20,
   },
-  inputEditable: {
-    backgroundColor: "#F5F5F5",
+  inputContainer: {
+    marginBottom: 16,
+  },
+  input: {
+    height: 40,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginTop: 5,
   },
   inputDisabled: {
     backgroundColor: "#F5F5F5",
-    opacity: 0.8,
+    borderColor: "#E0E0E0",
+  },
+  inputEditable: {
+    backgroundColor: "#FFFFFF",
+    borderColor: Colors.primary,
   },
   buttonContainer: {
-    marginVertical: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 30,
   },
   button: {
-    paddingVertical: 14,
-    borderRadius: 8,
+    flex: 1,
+    height: 40,
+    borderRadius: 5,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginHorizontal: 5,
   },
   editButton: {
     backgroundColor: Colors.primary,
@@ -279,22 +436,83 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   cancelButton: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
+    backgroundColor: "#E0E0E0",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "#000000",
   },
-  cancelButtonText: {
-    color: "#666666",
+  radioContainer: {
+    flexDirection: 'row',
+    marginTop: 8,
   },
-  backLink: {
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  radioButtonSelected: {
+    opacity: 1,
+  },
+  radioCircle: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioCircleSelected: {
+    borderColor: Colors.primary,
+    borderWidth: 6,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
     alignItems: "center",
-    marginBottom: 30,
   },
-  backLinkText: {
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.primary,
+  },
+  tabText: {
+    color: "#757575",
+  },
+  activeTabText: {
     color: Colors.primary,
+  },
+  historyContainer: {
+    flex: 1,
+  },
+  historyFilterContainer: {
+    flexDirection: "row",
+    padding: 10,
+    backgroundColor: "#F5F5F5",
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    marginRight: 8,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  activeFilterButton: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  filterButtonText: {
+    color: "#757575",
+  },
+  activeFilterButtonText: {
+    color: "#000000",
   },
 });
 

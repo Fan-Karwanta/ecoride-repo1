@@ -22,7 +22,8 @@ interface ProfileData {
   lastName: string;
   phone: string;
   email: string;
-  schoolId: string;
+  licenseId: string;
+  sex: string;
 }
 
 interface ProfileModalProps {
@@ -40,7 +41,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     lastName: "",
     phone: "",
     email: "",
-    schoolId: "",
+    licenseId: "",
+    sex: "",
   });
 
   useEffect(() => {
@@ -59,7 +61,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
         lastName: userData.lastName || "",
         phone: userData.phone || "",
         email: userData.email || "",
-        schoolId: userData.schoolId || "",
+        licenseId: userData.licenseId || "",
+        sex: userData.sex || "",
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -160,9 +163,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                 />
 
                 <CustomInput
-                  label="School ID #"
-                  value={profileData.schoolId}
-                  onChangeText={(text: string) => handleInputChange("schoolId", text)}
+                  label="License ID #"
+                  value={profileData.licenseId}
+                  onChangeText={(text: string) => handleInputChange("licenseId", text)}
                   editable={isEditing}
                   style={isEditing ? styles.inputEditable : styles.inputDisabled}
                 />
@@ -175,6 +178,32 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                   keyboardType="email-address"
                   style={isEditing ? styles.inputEditable : styles.inputDisabled}
                 />
+
+                <View style={styles.inputContainer}>
+                  <CustomText fontFamily="Medium">Sex</CustomText>
+                  {isEditing ? (
+                    <View style={styles.radioContainer}>
+                      <TouchableOpacity 
+                        style={[styles.radioButton, profileData.sex === "male" && styles.radioButtonSelected]} 
+                        onPress={() => handleInputChange("sex", "male")}
+                      >
+                        <View style={[styles.radioCircle, profileData.sex === "male" && styles.radioCircleSelected]} />
+                        <CustomText fontFamily="Regular">Male</CustomText>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.radioButton, profileData.sex === "female" && styles.radioButtonSelected]} 
+                        onPress={() => handleInputChange("sex", "female")}
+                      >
+                        <View style={[styles.radioCircle, profileData.sex === "female" && styles.radioCircleSelected]} />
+                        <CustomText fontFamily="Regular">Female</CustomText>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={[styles.input, styles.inputDisabled, { justifyContent: 'center' }]}>
+                      <CustomText fontFamily="Regular">{profileData.sex || 'Not specified'}</CustomText>
+                    </View>
+                  )}
+                </View>
               </View>
 
               <View style={styles.buttonContainer}>
@@ -285,6 +314,43 @@ const styles = StyleSheet.create({
   inputDisabled: {
     backgroundColor: "#F5F5F5",
     opacity: 0.8,
+  },
+  inputContainer: {
+    marginVertical: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 5,
+    fontSize: 16,
+  },
+  radioContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioButtonSelected: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    marginRight: 10,
+  },
+  radioCircleSelected: {
+    backgroundColor: Colors.primary,
   },
   buttonContainer: {
     marginVertical: 20,

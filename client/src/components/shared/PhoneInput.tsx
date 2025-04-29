@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import { RFValue } from "react-native-responsive-fontsize";
 import CustomText from "./CustomText";
 
+// phone input +63
 const PhoneInput: FC<PhoneInputProps> = ({
   value,
   onChangeText,
@@ -12,7 +13,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
   return (
     <View style={styles.container}>
       <CustomText fontFamily="Medium" style={styles.text}>
-        🇮🇳 +91
+        -
       </CustomText>
       <TextInput
         placeholder="0000000000"

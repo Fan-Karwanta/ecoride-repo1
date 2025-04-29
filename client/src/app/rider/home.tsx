@@ -4,64 +4,24 @@ import { useIsFocused } from "@react-navigation/native";
 import { useWS } from "@/service/WSProvider";
 import { useRiderStore } from "@/store/riderStore";
 import { getMyRides } from "@/service/rideService";
-import * as Location from "expo-location";
 import { homeStyles } from "@/styles/homeStyles";
 import { StatusBar } from "expo-status-bar";
 import RiderHeader from "@/components/rider/RiderHeader";
 import { riderStyles } from "@/styles/riderStyles";
 import CustomText from "@/components/shared/CustomText";
 import RiderRidesItem from "@/components/rider/RiderRidesItem";
+import LocationTracker from "@/components/rider/LocationTracker";
 
 export default function RiderHome() {
   const isFocused = useIsFocused();
   const { emit, on, off } = useWS();
-  const { onDuty, setLocation } = useRiderStore();
+  const { onDuty } = useRiderStore();
 
   const [rideOffers, setRideOffers] = useState<any[]>([]);
 
   useEffect(() => {
     getMyRides(false);
   }, []);
-
-  useEffect(() => {
-    let locationsSubscription: any;
-    const startLocationUpdates = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === "granted") {
-        locationsSubscription = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.High,
-            timeInterval: 10000,
-            distanceInterval: 10,
-          },
-          (location) => {
-            const { latitude, longitude, heading } = location.coords;
-            setLocation({
-              latitude: latitude,
-              longitude: longitude,
-              address: "Somewhere",
-              heading: heading as number,
-            });
-            emit("updateLocation", {
-              latitude,
-              longitude,
-              heading,
-            });
-          }
-        );
-      }
-    };
-
-    if (onDuty && isFocused) {
-      startLocationUpdates();
-    }
-
-    return () => {
-      if (locationsSubscription) {
-        locationsSubscription.remove();
-      }
-    };
-  }, [onDuty, isFocused]);
 
   useEffect(() => {
     if (onDuty && isFocused) {
@@ -97,6 +57,7 @@ export default function RiderHome() {
     <View style={homeStyles.container}>
       <StatusBar style="light" backgroundColor="orange" translucent={false} />
       <RiderHeader />
+      <LocationTracker />
 
       <FlatList
         data={!onDuty ? [] : rideOffers}
@@ -121,4 +82,3 @@ export default function RiderHome() {
     </View>
   );
 };
-

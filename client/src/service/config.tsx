@@ -2,8 +2,8 @@ import { Platform } from "react-native";
 
 // Get your actual IP address for better connectivity with Expo Go
 // This is the IP address that was shown in your Expo logs: 10.0.254.226
-export const BASE_URL = 'http://192.168.225.149:3000';
-export const SOCKET_URL = 'ws://192.168.225.149:3000';
+export const BASE_URL = 'http://10.0.254.226:3000';
+export const SOCKET_URL = 'ws://10.0.254.226:3000';
 
 // Alternative configurations (uncomment as needed)
 // For local testing

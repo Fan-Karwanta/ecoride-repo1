@@ -11,6 +11,7 @@ import { mapStyles } from "@/styles/mapStyles";
 import { FontAwesome6, MaterialCommunityIcons } from "@expo/vector-icons";
 import { RFValue } from "react-native-responsive-fontsize";
 import * as Location from "expo-location";
+import DriverDetailsModal from "./DriverDetailsModal";
 
 const DraggableMap: FC<{ height: number }> = ({ height }) => {
   const isFocused = useIsFocused();
@@ -19,6 +20,8 @@ const DraggableMap: FC<{ height: number }> = ({ height }) => {
   const { setLocation, location, outOfRange, setOutOfRange } = useUserStore();
   const { emit, on, off } = useWS();
   const MAX_DISTANCE_THRESHOLD = 10000;
+  const [selectedDriver, setSelectedDriver] = useState<any>(null);
+  const [driverModalVisible, setDriverModalVisible] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -49,58 +52,32 @@ const DraggableMap: FC<{ height: number }> = ({ height }) => {
     })();
   }, [mapRef, isFocused]);
 
-  // REALTIME NEARBY RIDERS
-
-  // useEffect(() => {
-  //   if (location?.latitude && location?.longitude && isFocused) {
-  //     emit("subscribeToZone", {
-  //       latitude: location.latitude,
-  //       longitude: location.longitude,
-  //     });
-
-  //     on("nearbyRiders", (riders: any[]) => {
-  //       const updatedMarkers = riders.map((rider) => ({
-  //         id: rider.id,
-  //         latitude: rider.coords.latitude,
-  //         longitude: rider.coords.longitude,
-  //         type: "rider",
-  //         rotation: rider.coords.heading,
-  //         visible: true,
-  //       }));
-  //       setMarkers(updatedMarkers);
-  //     });
-  //   }
-
-  //   return () => {
-  //     off("nearbyriders");
-  //   };
-  // }, [location, emit, on, off, isFocused]);
-
-  // SIMULATING NEARBY RIDERS
-
-  const generateRandomMarkers = () => {
-    if (!location?.latitude || !location?.longitude || outOfRange) return;
-
-    const types = ["bike", "auto", "cab"];
-    const newMarkers = Array.from({ length: 20 }, (_, index) => {
-      const randomType = types[Math.floor(Math.random() * types.length)];
-      const randomRotation = Math.floor(Math.random() * 360);
-
-      return {
-        id: index,
-        latitude: location?.latitude + (Math.random() - 0.5) * 0.01,
-        longitude: location?.longitude + (Math.random() - 0.5) * 0.01,
-        type: randomType,
-        rotation: randomRotation,
-        visible: true,
-      };
-    });
-    setMarkers(newMarkers);
-  };
-
   useEffect(() => {
-    generateRandomMarkers();
-  }, [location]);
+    if (location?.latitude && location?.longitude && isFocused) {
+      emit("subscribeToZone", {
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+
+      on("nearbyriders", (riders: any[]) => {
+        const updatedMarkers = riders.map((rider) => ({
+          id: rider.socketId,
+          riderId: rider.riderId,
+          latitude: rider.coords.latitude,
+          longitude: rider.coords.longitude,
+          type: rider.vehicleType || "auto", // Use vehicle type if available
+          rotation: rider.coords.heading || 0,
+          visible: true,
+          driverInfo: rider.driverInfo || null,
+        }));
+        setMarkers(updatedMarkers);
+      });
+    }
+
+    return () => {
+      off("nearbyriders");
+    };
+  }, [location, emit, on, off, isFocused]);
 
   const handleRegionChangeComplete = async (newRegion: Region) => {
     const address = await reverseGeocode(
@@ -143,6 +120,30 @@ const DraggableMap: FC<{ height: number }> = ({ height }) => {
     }
   };
 
+  const handleMarkerPress = (marker: any) => {
+    if (marker.riderId) {
+      // Fetch driver details
+      emit("getDriverDetails", { riderId: marker.riderId });
+      
+      // Listen for driver details response
+      on("driverDetailsResponse", (driverDetails: any) => {
+        setSelectedDriver({
+          ...driverDetails,
+          vehicleType: marker.type,
+        });
+        setDriverModalVisible(true);
+        
+        // Remove the listener after receiving the response
+        off("driverDetailsResponse");
+      });
+    }
+  };
+
+  const closeDriverModal = () => {
+    setDriverModalVisible(false);
+    setSelectedDriver(null);
+  };
+
   return (
     <View style={{ height: height, width: "100%" }}>
       <MapView
@@ -180,6 +181,7 @@ const DraggableMap: FC<{ height: number }> = ({ height }) => {
                 latitude: marker.latitude,
                 longitude: marker?.longitude,
               }}
+              onPress={() => handleMarkerPress(marker)}
             >
               <View
                 style={{ transform: [{ rotate: `${marker?.rotation}deg` }] }}
@@ -221,6 +223,12 @@ const DraggableMap: FC<{ height: number }> = ({ height }) => {
           <FontAwesome6 name="road-circle-exclamation" size={24} color="red" />
         </View>
       )}
+
+      <DriverDetailsModal
+        visible={driverModalVisible}
+        driverDetails={selectedDriver}
+        onClose={closeDriverModal}
+      />
     </View>
   );
 };

@@ -39,8 +39,8 @@ const LiveTrackingSheet: FC<{ item: RideItem }> = ({ item }) => {
               {item?.status === "START"
                 ? "Rider near you"
                 : item?.status === "ARRIVED"
-                ? "HAPPY JOURNEY"
-                : "WOHOO 🎉"}
+                ? "Ride in Progress..."
+                : "Ride Completed! 🎉"}
             </CustomText>
 
             <CustomText>
@@ -51,7 +51,7 @@ const LiveTrackingSheet: FC<{ item: RideItem }> = ({ item }) => {
 
         {item?.rider?.phone && (
           <CustomText fontSize={11} numberOfLines={1} fontFamily="Medium">
-            +91{" "}
+            {" "}
             {item?.rider?.phone &&
               item?.rider?.phone?.slice(0, 5) +
                 " " +

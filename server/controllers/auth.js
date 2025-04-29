@@ -57,7 +57,9 @@ export const register = async (req, res) => {
     middleName, 
     lastName, 
     phone, 
-    schoolId 
+    schoolId,
+    licenseId,
+    sex
   } = req.body;
 
   if (!email || !password) {
@@ -84,7 +86,9 @@ export const register = async (req, res) => {
       middleName,
       lastName,
       phone,
-      schoolId
+      schoolId,
+      licenseId,
+      sex
     });
 
     await user.save();
@@ -207,7 +211,7 @@ export const getUserProfile = async (req, res) => {
 
 // Update user profile information
 export const updateUserProfile = async (req, res) => {
-  const { firstName, middleName, lastName, phone, schoolId, email } = req.body;
+  const { firstName, middleName, lastName, phone, schoolId, licenseId, email, sex } = req.body;
 
   try {
     const user = await User.findById(req.user.id);
@@ -222,6 +226,8 @@ export const updateUserProfile = async (req, res) => {
     if (lastName) user.lastName = lastName;
     if (phone) user.phone = phone;
     if (schoolId !== undefined) user.schoolId = schoolId;
+    if (licenseId !== undefined) user.licenseId = licenseId;
+    if (sex) user.sex = sex;
     if (email) {
       // Check if email is already in use by another user
       const existingUser = await User.findOne({ email, _id: { $ne: req.user.id } });

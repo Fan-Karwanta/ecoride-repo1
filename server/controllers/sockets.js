@@ -29,7 +29,11 @@ const handleSocketConnection = (io) => {
 
     if (user.role === "rider") {
       socket.on("goOnDuty", (coords) => {
-        onDutyRiders.set(user.id, { socketId: socket.id, coords });
+        onDutyRiders.set(user.id, { 
+          socketId: socket.id, 
+          coords,
+          riderId: user.id 
+        });
         socket.join("onDuty");
         console.log(`rider ${user.id} is now on duty.`);
         updateNearbyriders();
@@ -59,6 +63,35 @@ const handleSocketConnection = (io) => {
       socket.on("subscribeToZone", (customerCoords) => {
         socket.user.coords = customerCoords;
         sendNearbyRiders(socket, customerCoords);
+      });
+
+      socket.on("getDriverDetails", async ({ riderId }) => {
+        try {
+          if (!riderId) {
+            return socket.emit("error", { message: "Driver ID is required" });
+          }
+          
+          const driver = await User.findById(riderId).select("firstName lastName phone rating vehicleType licenseId");
+          
+          if (!driver) {
+            return socket.emit("error", { message: "Driver not found" });
+          }
+          
+          // Send driver details back to the customer
+          socket.emit("driverDetailsResponse", {
+            firstName: driver.firstName,
+            lastName: driver.lastName,
+            phone: driver.phone,
+            licenseId: driver.licenseId,
+            rating: driver.rating || 4.5, // Default rating if not available
+            vehicleType: driver.vehicleType || "auto" // Default vehicle type if not available
+          });
+          
+          console.log(`Sent driver ${riderId} details to customer ${user.id}`);
+        } catch (error) {
+          console.error("Error fetching driver details:", error);
+          socket.emit("error", { message: "Error fetching driver details" });
+        }
       });
 
       socket.on("searchrider", async (rideId) => {
@@ -146,24 +179,43 @@ const handleSocketConnection = (io) => {
       });
     }
 
-    function sendNearbyRiders(socket, location, ride = null) {
-      const nearbyriders = Array.from(onDutyRiders.values())
-        .map((rider) => ({
-          ...rider,
-          distance: geolib.getDistance(rider.coords, location),
-        }))
-        .filter((rider) => rider.distance <= 60000)
-        .sort((a, b) => a.distance - b.distance);
+    async function sendNearbyRiders(socket, location, ride = null) {
+      try {
+        const nearbyRidersArray = Array.from(onDutyRiders.entries()).map(
+          async ([riderId, riderData]) => {
+            // Get basic rider info from database for each nearby rider
+            const riderInfo = await User.findById(riderId).select(
+              "firstName lastName vehicleType"
+            );
+            
+            return {
+              ...riderData,
+              riderId,
+              distance: geolib.getDistance(riderData.coords, location),
+              vehicleType: riderInfo?.vehicleType || "auto",
+            };
+          }
+        );
 
-      socket.emit("nearbyriders", nearbyriders);
+        const resolvedRiders = await Promise.all(nearbyRidersArray);
+        
+        const nearbyriders = resolvedRiders
+          .filter((rider) => rider.distance <= 60000)
+          .sort((a, b) => a.distance - b.distance);
 
-      if (ride) {
-        nearbyriders.forEach((rider) => {
-          io.to(rider.socketId).emit("rideOffer", ride);
-        });
+        socket.emit("nearbyriders", nearbyriders);
+
+        if (ride) {
+          nearbyriders.forEach((rider) => {
+            io.to(rider.socketId).emit("rideOffer", ride);
+          });
+        }
+
+        return nearbyriders;
+      } catch (error) {
+        console.error("Error sending nearby riders:", error);
+        return [];
       }
-
-      return nearbyriders;
     }
 
     function getRiderSocket(riderId) {

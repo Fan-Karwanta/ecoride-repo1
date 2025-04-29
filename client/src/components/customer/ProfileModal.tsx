@@ -23,6 +23,7 @@ interface ProfileData {
   phone: string;
   email: string;
   schoolId: string;
+  sex: string;
 }
 
 interface ProfileModalProps {
@@ -41,6 +42,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     phone: "",
     email: "",
     schoolId: "",
+    sex: "",
   });
 
   useEffect(() => {
@@ -60,6 +62,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
         phone: userData.phone || "",
         email: userData.email || "",
         schoolId: userData.schoolId || "",
+        sex: userData.sex || "",
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -175,6 +178,32 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                   keyboardType="email-address"
                   style={isEditing ? styles.inputEditable : styles.inputDisabled}
                 />
+
+                <View style={styles.inputContainer}>
+                  <CustomText fontFamily="Medium">Sex</CustomText>
+                  {isEditing ? (
+                    <View style={styles.radioContainer}>
+                      <TouchableOpacity 
+                        style={[styles.radioButton, profileData.sex === "male" && styles.radioButtonSelected]} 
+                        onPress={() => handleInputChange("sex", "male")}
+                      >
+                        <View style={[styles.radioCircle, profileData.sex === "male" && styles.radioCircleSelected]} />
+                        <CustomText fontFamily="Regular">Male</CustomText>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.radioButton, profileData.sex === "female" && styles.radioButtonSelected]} 
+                        onPress={() => handleInputChange("sex", "female")}
+                      >
+                        <View style={[styles.radioCircle, profileData.sex === "female" && styles.radioCircleSelected]} />
+                        <CustomText fontFamily="Regular">Female</CustomText>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={[styles.input, styles.inputDisabled, { justifyContent: 'center' }]}>
+                      <CustomText fontFamily="Regular">{profileData.sex || 'Not specified'}</CustomText>
+                    </View>
+                  )}
+                </View>
               </View>
 
               <View style={styles.buttonContainer}>
@@ -311,6 +340,44 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "#666666",
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  radioContainer: {
+    flexDirection: 'row',
+    marginTop: 5,
+    justifyContent: 'flex-start',
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+    paddingVertical: 8,
+  },
+  radioButtonSelected: {
+    opacity: 1,
+  },
+  radioCircle: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioCircleSelected: {
+    backgroundColor: Colors.primary,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 5,
+    fontSize: 16,
   },
 });
 

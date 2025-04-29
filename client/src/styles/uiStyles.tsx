@@ -26,7 +26,9 @@ export const uiStyles = StyleSheet.create({
         shadowColor: '#000',
         elevation: 10,
         alignItems: 'center',
-        padding: 10
+        padding: 10,
+        width: 44,
+        height: 44
     },
     dot: {
         width: 6,
@@ -36,10 +38,10 @@ export const uiStyles = StyleSheet.create({
         marginHorizontal: 10
     },
     locationBar: {
-        width: '88%',
+        width: '53%',
         backgroundColor: "white",
-        borderRadius: 10,
-        height: 38,
+        borderRadius: 15,
+        height: 44,
         shadowOffset: { width: 1, height: 1 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
@@ -50,7 +52,7 @@ export const uiStyles = StyleSheet.create({
         flexDirection: 'row',
     },
     locationText: {
-        width: '86%',
+        width: '76%',
         fontSize: RFValue(10),
         fontFamily: 'Regular',
         color: Colors.text,
@@ -144,5 +146,10 @@ export const uiStyles = StyleSheet.create({
         shadowRadius: 2,
         shadowColor: '#000',
         elevation: 2,
+    },
+    buttonGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     }
 })

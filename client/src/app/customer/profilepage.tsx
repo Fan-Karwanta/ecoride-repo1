@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import { Stack, router, useLocalSearchParams } from "expo-router";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { RFValue } from "react-native-responsive-fontsize";
@@ -8,8 +8,7 @@ import { Colors } from "@/utils/Constants";
 import CustomText from "@/components/shared/CustomText";
 import CustomInput from "@/components/shared/CustomInput";
 import { getUserProfile, updateUserProfile } from "@/service/authService";
-import { useRiderStore } from "@/store/riderStore";
-import RideHistory from "@/components/rider/RideHistory";
+import { useUserStore } from "@/store/userStore";
 
 interface ProfileData {
   firstName: string;
@@ -21,15 +20,10 @@ interface ProfileData {
   sex: string;
 }
 
-const RiderProfile = () => {
-  const { user } = useRiderStore();
-  const params = useLocalSearchParams();
+const CustomerProfilePage = () => {
+  const { user } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "history">(
-    params.tab === "history" ? "history" : "profile"
-  );
-  const [historyFilter, setHistoryFilter] = useState<string>("all");
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: "",
     middleName: "",
@@ -69,8 +63,10 @@ const RiderProfile = () => {
       setIsLoading(true);
       await updateUserProfile(profileData);
       setIsEditing(false);
+      Alert.alert("Success", "Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
+      Alert.alert("Error", "Failed to update profile");
     } finally {
       setIsLoading(false);
     }
@@ -83,9 +79,32 @@ const RiderProfile = () => {
     }));
   };
 
-  const renderTabContent = () => {
-    if (activeTab === "profile") {
-      return (
+  return (
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={RFValue(24)} color="black" />
+        </TouchableOpacity>
+        <CustomText fontFamily="Bold" fontSize={18} style={styles.headerTitle}>
+          My Profile
+        </CustomText>
+      </View>
+
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
         <ScrollView style={styles.content}>
           <View style={styles.profileImageContainer}>
             <View style={styles.profileImage}>
@@ -128,7 +147,7 @@ const RiderProfile = () => {
             />
 
             <CustomInput
-              label="License ID #"
+              label="School ID #"
               value={profileData.schoolId}
               onChangeText={(text: string) => handleInputChange("schoolId", text)}
               editable={isEditing}
@@ -203,133 +222,6 @@ const RiderProfile = () => {
             )}
           </View>
         </ScrollView>
-      );
-    } else {
-      return (
-        <View style={styles.historyContainer}>
-          <View style={styles.historyFilterContainer}>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                historyFilter === "all" && styles.activeFilterButton,
-              ]}
-              onPress={() => setHistoryFilter("all")}
-            >
-              <CustomText
-                fontFamily="Medium"
-                fontSize={12}
-                style={[
-                  styles.filterButtonText,
-                  historyFilter === "all" && styles.activeFilterButtonText,
-                ]}
-              >
-                All
-              </CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                historyFilter === "COMPLETED" && styles.activeFilterButton,
-              ]}
-              onPress={() => setHistoryFilter("COMPLETED")}
-            >
-              <CustomText
-                fontFamily="Medium"
-                fontSize={12}
-                style={[
-                  styles.filterButtonText,
-                  historyFilter === "COMPLETED" && styles.activeFilterButtonText,
-                ]}
-              >
-                Completed
-              </CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                (historyFilter === "START" || historyFilter === "ARRIVED") && styles.activeFilterButton,
-              ]}
-              onPress={() => setHistoryFilter("START")}
-            >
-              <CustomText
-                fontFamily="Medium"
-                fontSize={12}
-                style={[
-                  styles.filterButtonText,
-                  (historyFilter === "START" || historyFilter === "ARRIVED") && styles.activeFilterButtonText,
-                ]}
-              >
-                Active
-              </CustomText>
-            </TouchableOpacity>
-          </View>
-          <RideHistory activeTab={historyFilter} />
-        </View>
-      );
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={RFValue(24)} color="black" />
-        </TouchableOpacity>
-        <CustomText fontFamily="Bold" fontSize={18} style={styles.headerTitle}>
-          My Profile
-        </CustomText>
-      </View>
-
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "profile" && styles.activeTab]}
-          onPress={() => setActiveTab("profile")}
-        >
-          <CustomText
-            fontFamily="Medium"
-            fontSize={14}
-            style={[
-              styles.tabText,
-              activeTab === "profile" && styles.activeTabText,
-            ]}
-          >
-            Profile
-          </CustomText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "history" && styles.activeTab]}
-          onPress={() => setActiveTab("history")}
-          testID="history-tab"
-        >
-          <CustomText
-            fontFamily="Medium"
-            fontSize={14}
-            style={[
-              styles.tabText,
-              activeTab === "history" && styles.activeTabText,
-            ]}
-          >
-            Ride History
-          </CustomText>
-        </TouchableOpacity>
-      </View>
-
-      {isLoading && activeTab === "profile" ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
-      ) : (
-        renderTabContent()
       )}
     </View>
   );
@@ -449,53 +341,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     borderWidth: 6,
   },
-  tabContainer: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.primary,
-  },
-  tabText: {
-    color: "#757575",
-  },
-  activeTabText: {
-    color: Colors.primary,
-  },
-  historyContainer: {
-    flex: 1,
-  },
-  historyFilterContainer: {
-    flexDirection: "row",
-    padding: 10,
-    backgroundColor: "#F5F5F5",
-  },
-  filterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 8,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  activeFilterButton: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  filterButtonText: {
-    color: "#757575",
-  },
-  activeFilterButtonText: {
-    color: "#000000",
-  },
 });
 
-export default RiderProfile;
+export default CustomerProfilePage;

@@ -142,6 +142,8 @@ export const register = async (
     lastName?: string;
     phone?: string;
     schoolId?: string;
+    licenseId?: string;
+    sex?: string;
   },
   updateAccessToken: () => Promise<void>
 ) => {
@@ -217,7 +219,9 @@ export const updateUserProfile = async (profileData: {
   lastName?: string;
   phone?: string;
   schoolId?: string;
+  licenseId?: string;
   email?: string;
+  sex?: string;
 }) => {
   const { setUser } = useUserStore.getState();
   

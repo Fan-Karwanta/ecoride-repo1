@@ -44,13 +44,23 @@ export const riderStyles = StyleSheet.create({
         backgroundColor: "#888"
     },
     profileIconButton: {
-        marginRight: 15,
-        padding: 2
+        backgroundColor: Colors.background,
+        borderRadius: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowOffset: { width: 1, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        shadowColor: '#000',
+        elevation: 10,
+        width: 44,
+        height: 44,
+        marginRight: 12
     },
     profileIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: Colors.primary,
         justifyContent: 'center',
         alignItems: 'center',

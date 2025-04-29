@@ -71,3 +71,15 @@ export const updateRideStatus = async (rideId: string, status: string) => {
     return false;
   }
 };
+
+export const getRideHistory = async (status?: string) => {
+  try {
+    const queryParams = status ? `?status=${status}` : '';
+    const res = await api.get(`/ride/rides${queryParams}`);
+    return res.data.rides || [];
+  } catch (error: any) {
+    console.log("Error: Get Ride History ", error);
+    Alert.alert("Error", "Failed to fetch ride history");
+    return [];
+  }
+};

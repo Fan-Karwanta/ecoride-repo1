@@ -41,7 +41,7 @@ const RiderActionButton: FC<{
           numberOfLines={1}
           fontFamily="Medium"
         >
-          +91{" "}
+          {" "}
           {ride?.customer?.phone &&
             ride?.customer?.phone?.slice(0, 5) +
               " " +

@@ -50,6 +50,15 @@ const userSchema = new Schema(
       type: String,
       required: false,
     },
+    licenseId: {
+      type: String,
+      required: false,
+    },
+    sex: {
+      type: String,
+      enum: ["male", "female"],
+      required: false,
+    },
   },
   {
     timestamps: true,

@@ -4,6 +4,7 @@ import { useWS } from "@/service/WSProvider";
 import { useUserStore } from "@/store/userStore";
 import { uiStyles } from "@/styles/uiStyles";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Colors } from "@/utils/Constants";
 import { RFValue } from "react-native-responsive-fontsize";
 import { router } from "expo-router";
@@ -22,7 +23,7 @@ const LocationBar = () => {
           style={uiStyles.btn}
           onPress={() => logout(disconnect)}
         >
-          <AntDesign name="poweroff" size={RFValue(12)} color={Colors.text} />
+          <AntDesign name="poweroff" size={RFValue(18)} color={Colors.text} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -35,6 +36,24 @@ const LocationBar = () => {
             {location?.address || "Getting address..."}
           </CustomText>
         </TouchableOpacity>
+
+        <View style={uiStyles.buttonGroup}>
+          <TouchableOpacity
+            style={uiStyles.btn}
+            onPress={() => router.push("/customer/ridehistory" as any)}
+            accessibilityLabel="Ride History"
+          >
+            <Ionicons name="time" size={RFValue(22)} color={Colors.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={uiStyles.btn}
+            onPress={() => router.push("/customer/profilepage" as any)}
+            accessibilityLabel="My Profile"
+          >
+            <Ionicons name="person" size={RFValue(22)} color={Colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

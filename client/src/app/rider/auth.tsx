@@ -28,6 +28,7 @@ export default function Auth() {
   const [lastName, setLastName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [licenseId, setLicenseId] = useState("");
+  const [sex, setSex] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -66,7 +67,8 @@ export default function Auth() {
         middleName,
         lastName,
         phone: contactNumber,
-        schoolId: licenseId // Using schoolId field in the backend for license ID
+        licenseId: licenseId,
+        sex
       }, updateAccessToken);
     } catch (error) {
       console.error("Registration error:", error);
@@ -188,6 +190,26 @@ export default function Auth() {
       </View>
 
       <View style={styles.inputContainer}>
+        <CustomText fontFamily="Medium">Sex</CustomText>
+        <View style={styles.radioContainer}>
+          <TouchableOpacity 
+            style={[styles.radioButton, sex === "male" && styles.radioButtonSelected]} 
+            onPress={() => setSex("male")}
+          >
+            <View style={[styles.radioCircle, sex === "male" && styles.radioCircleSelected]} />
+            <CustomText fontFamily="Regular">Male</CustomText>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.radioButton, sex === "female" && styles.radioButtonSelected]} 
+            onPress={() => setSex("female")}
+          >
+            <View style={[styles.radioCircle, sex === "female" && styles.radioCircleSelected]} />
+            <CustomText fontFamily="Regular">Female</CustomText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
         <CustomText fontFamily="Medium">Email</CustomText>
         <TextInput
           style={styles.input}
@@ -305,5 +327,32 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     color: '#4CAF50',
+  },
+  radioContainer: {
+    flexDirection: 'row',
+    marginTop: 5,
+    justifyContent: 'flex-start',
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+    paddingVertical: 8,
+  },
+  radioButtonSelected: {
+    opacity: 1,
+  },
+  radioCircle: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioCircleSelected: {
+    backgroundColor: '#4CAF50',
   },
 });

@@ -14,7 +14,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import CustomButton from "@/components/shared/CustomButton";
 import { createRide } from "@/service/rideService";
 
-export default function RideBooking() {
+const RideBooking = () => {
   const route = useRoute() as any;
   const item = route?.params as any;
   const { location } = useUserStore() as any;

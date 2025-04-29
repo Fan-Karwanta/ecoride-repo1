@@ -39,7 +39,7 @@ export default function Main() {
 
         const currentTime = Date.now() / 1000;
 
-        if (decodedRefreshToken?.exp < currentTime) {
+        if (decodedRefreshToken && decodedRefreshToken.exp && decodedRefreshToken.exp < currentTime) {
           logout();
           Alert.alert("Session Expired, please login again");
         }

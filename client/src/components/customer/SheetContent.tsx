@@ -69,7 +69,7 @@ const SheetContent = () => {
         ))}
       </View>
 
-      {/* Profile Button */}
+      {/* Profile Button 
       <TouchableOpacity
         style={uiStyles.profileButton}
         onPress={() => setProfileModalVisible(true)}
@@ -78,7 +78,7 @@ const SheetContent = () => {
         <CustomText fontFamily="Medium" fontSize={11} style={{ marginLeft: 8 }}>
           My Profile
         </CustomText>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <View style={uiStyles.adSection}>
         <Image

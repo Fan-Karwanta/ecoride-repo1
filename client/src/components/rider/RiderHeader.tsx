@@ -100,13 +100,28 @@ const RiderHeader = () => {
           <View style={commonStyles.flexRow}>
             <TouchableOpacity 
               style={riderStyles.profileIconButton}
+              onPress={() => router.push("/rider/ridehistory" as any)}
+              accessibilityLabel="Ride History"
+            >
+              <Ionicons name="time" size={RFValue(22)} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={riderStyles.profileIconButton}
+              onPress={() => router.push("/rider/profilepage" as any)}
+              accessibilityLabel="My Profile"
+            >
+              <Ionicons name="person" size={RFValue(22)} color="black" />
+            </TouchableOpacity>
+            {/*
+            <TouchableOpacity 
+              style={riderStyles.profileIconButton}
               onPress={() => setProfileModalVisible(true)}
             >
               <View style={riderStyles.profileIconContainer}>
-                <Ionicons name="person-circle" size={RFValue(26)} color="black" />
+                <Ionicons name="settings-outline" size={RFValue(24)} color="black" /> 
               </View>
-            </TouchableOpacity>
-            <MaterialIcons name="notifications" size={24} color="black" />
+            </TouchableOpacity> */}
+            {/* <MaterialIcons name="notifications" size={24} color="black" /> */}
           </View>
         </View>
       </View>
