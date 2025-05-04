@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   ScrollView,
-  Dimensions
+  Dimensions,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RFValue } from "react-native-responsive-fontsize";
@@ -55,6 +56,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
     try {
       setIsLoading(true);
       const userData = await getUserProfile();
+      console.log("ProfileModal - Fetched user data:", userData); // Debug log
       setProfileData({
         firstName: userData.firstName || "",
         middleName: userData.middleName || "",
@@ -63,6 +65,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
         email: userData.email || "",
         licenseId: userData.licenseId || "",
         sex: userData.sex || "",
+      });
+      
+      // Update the rider store with the latest user data
+      useRiderStore.getState().setUser({
+        ...useRiderStore.getState().user,
+        licenseId: userData.licenseId || "",
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -73,6 +81,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
 
   const handleUpdateProfile = async () => {
     try {
+      if (profileData.licenseId && profileData.licenseId.length < 4) {
+        Alert.alert("Invalid License ID", "License ID must be at least 4 characters");
+        return;
+      }
+      
       setIsLoading(true);
       await updateUserProfile(profileData);
       setIsEditing(false);
@@ -84,10 +97,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
   };
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    if (field === "licenseId" && value) {
+      const formattedValue = value.trim().toUpperCase();
+      setProfileData((prev) => ({
+        ...prev,
+        [field]: formattedValue,
+      }));
+    } else {
+      setProfileData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
   const handleClose = () => {
@@ -166,8 +187,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose }) => {
                   label="License ID #"
                   value={profileData.licenseId}
                   onChangeText={(text: string) => handleInputChange("licenseId", text)}
-                  editable={isEditing}
-                  style={isEditing ? styles.inputEditable : styles.inputDisabled}
+                  editable={false}
+                  style={styles.inputDisabled}
                 />
 
                 <CustomInput

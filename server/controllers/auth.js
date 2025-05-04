@@ -12,26 +12,58 @@ export const testAuth = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password, role } = req.body;
 
+  console.log("Login attempt:", { email, role }); // Log login attempt details
+
   if (!email || !password) {
     throw new BadRequestError("Please provide email and password");
   }
 
-  if (!role || !["customer", "rider"].includes(role)) {
-    throw new BadRequestError("Valid role is required (customer or rider)");
+  if (!role || !["customer", "rider", "admin"].includes(role)) {
+    throw new BadRequestError("Valid role is required (customer, rider, or admin)");
   }
 
   try {
+    // Find user without role restriction first to debug
+    const anyUser = await User.findOne({ email });
+    console.log("User found with this email:", anyUser ? "Yes" : "No");
+    if (anyUser) {
+      console.log("User role:", anyUser.role, "Requested role:", role);
+    }
+
     const user = await User.findOne({ email, role });
     
     if (!user) {
+      console.log("User not found with email and role combination");
       throw new UnauthenticatedError("Invalid credentials");
     }
 
+    console.log("User found, checking password");
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
+      console.log("Password incorrect");
       throw new UnauthenticatedError("Invalid credentials");
     }
 
+    // Check if user is approved (skip for admin users)
+    if (role !== 'admin') {
+      if (user.status === "disapproved") {
+        console.log("User is disapproved");
+        return res.status(StatusCodes.FORBIDDEN).json({
+          message: "Your account has been disapproved. Please contact support for assistance.",
+          status: "disapproved",
+          isApproved: false
+        });
+      } else if (user.status === "pending") {
+        console.log("User is pending approval");
+        return res.status(StatusCodes.FORBIDDEN).json({
+          message: "Your account is pending approval. Please wait for an administrator to approve your account.",
+          status: "pending",
+          isApproved: false
+        });
+      }
+    }
+
+    console.log("Password correct, generating tokens");
     const accessToken = user.createAccessToken();
     const refreshToken = user.createRefreshToken();
 
@@ -77,6 +109,17 @@ export const register = async (req, res) => {
       throw new BadRequestError("Email already in use");
     }
 
+    // Format licenseId if provided and user is a rider
+    let formattedLicenseId = licenseId;
+    if (role === "rider" && licenseId) {
+      formattedLicenseId = licenseId.trim().toUpperCase();
+      
+      // Basic validation for license ID format
+      if (formattedLicenseId.length < 4) {
+        throw new BadRequestError("License ID must be at least 4 characters");
+      }
+    }
+
     // Create new user
     const user = new User({
       email,
@@ -87,20 +130,25 @@ export const register = async (req, res) => {
       lastName,
       phone,
       schoolId,
-      licenseId,
-      sex
+      licenseId: formattedLicenseId,
+      sex,
+      approved: false, // Ensure all new users start as unapproved
+      status: "pending"
     });
 
     await user.save();
 
+    // Generate tokens but inform user that approval is pending
     const accessToken = user.createAccessToken();
     const refreshToken = user.createRefreshToken();
 
     res.status(StatusCodes.CREATED).json({
-      message: "User created successfully",
+      message: "User registered successfully. Your account is pending approval.",
       user,
       access_token: accessToken,
       refresh_token: refreshToken,
+      isApproved: false,
+      status: "pending"
     });
   } catch (error) {
     console.error(error);
@@ -128,6 +176,23 @@ export const auth = async (req, res) => {
         throw new BadRequestError("Phone number and role do not match");
       }
 
+      // Check if user is approved
+      if (user.status === "disapproved") {
+        console.log("User is disapproved");
+        return res.status(StatusCodes.FORBIDDEN).json({
+          message: "Your account has been disapproved. Please contact support for assistance.",
+          status: "disapproved",
+          isApproved: false
+        });
+      } else if (user.status === "pending") {
+        console.log("User is pending approval");
+        return res.status(StatusCodes.FORBIDDEN).json({
+          message: "Your account is pending approval. Please wait for an administrator to approve your account.",
+          status: "pending",
+          isApproved: false
+        });
+      }
+
       const accessToken = user.createAccessToken();
       const refreshToken = user.createRefreshToken();
 
@@ -145,18 +210,23 @@ export const auth = async (req, res) => {
       // Set a temporary email and password for legacy users
       email: `${phone}@temp.ecoride.com`,
       password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
+      // Set approved to false by default
+      approved: false,
+      status: "pending"
     });
 
     await user.save();
 
-    const accessToken = user.createAccessToken();
-    const refreshToken = user.createRefreshToken();
-
-    res.status(StatusCodes.CREATED).json({
-      message: "User created successfully",
-      user,
-      access_token: accessToken,
-      refresh_token: refreshToken,
+    // Return pending status for new users
+    return res.status(StatusCodes.FORBIDDEN).json({
+      message: "Account pending approval",
+      status: "pending",
+      isApproved: false,
+      user: {
+        _id: user._id,
+        phone: user.phone,
+        role: user.role
+      }
     });
   } catch (error) {
     console.error(error);
@@ -226,7 +296,23 @@ export const updateUserProfile = async (req, res) => {
     if (lastName) user.lastName = lastName;
     if (phone) user.phone = phone;
     if (schoolId !== undefined) user.schoolId = schoolId;
-    if (licenseId !== undefined) user.licenseId = licenseId;
+    
+    // Format and validate licenseId if provided and user is a rider
+    if (licenseId !== undefined) {
+      if (user.role === "rider" && licenseId) {
+        const formattedLicenseId = licenseId.trim().toUpperCase();
+        
+        // Basic validation for license ID format
+        if (formattedLicenseId.length < 4) {
+          throw new BadRequestError("License ID must be at least 4 characters");
+        }
+        
+        user.licenseId = formattedLicenseId;
+      } else {
+        user.licenseId = licenseId;
+      }
+    }
+    
     if (sex) user.sex = sex;
     if (email) {
       // Check if email is already in use by another user

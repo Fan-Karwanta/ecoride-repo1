@@ -98,6 +98,16 @@ export const login = async (
     const res = await axios.post(`${BASE_URL}/auth/login`, payload);
     console.log("Login response:", res.data);
     
+    // Check if the user is approved
+    if (res.data.status === "disapproved") {
+      Alert.alert(
+        "Account Disapproved",
+        "Your account has been disapproved. Please contact support for further assistance.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+    
     if (res.data.user.role === "customer") {
       setUser(res.data.user);
     } else {

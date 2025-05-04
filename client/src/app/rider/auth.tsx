@@ -51,9 +51,21 @@ export default function Auth() {
     }
   };
 
+  const handleLicenseIdChange = (text: string) => {
+    // Format license ID input (uppercase and trim whitespace)
+    const formattedLicenseId = text.trim().toUpperCase();
+    setLicenseId(formattedLicenseId);
+  };
+
   const handleRegister = async () => {
     if (!email || !password) {
       Alert.alert("Please enter both email and password");
+      return;
+    }
+
+    // Validate license ID
+    if (licenseId && licenseId.length < 4) {
+      Alert.alert("Invalid License ID", "License ID must be at least 4 characters");
       return;
     }
     
@@ -185,7 +197,9 @@ export default function Auth() {
         <TextInput
           style={styles.input}
           value={licenseId}
-          onChangeText={setLicenseId}
+          onChangeText={handleLicenseIdChange}
+          autoCapitalize="characters"
+          placeholder="Enter your driver's license ID"
         />
       </View>
 

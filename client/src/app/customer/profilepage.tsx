@@ -150,8 +150,8 @@ const CustomerProfilePage = () => {
               label="School ID #"
               value={profileData.schoolId}
               onChangeText={(text: string) => handleInputChange("schoolId", text)}
-              editable={isEditing}
-              style={isEditing ? styles.inputEditable : styles.inputDisabled}
+              editable={false}
+              style={styles.inputDisabled}
             />
 
             <CustomInput

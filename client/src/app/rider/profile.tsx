@@ -17,7 +17,7 @@ interface ProfileData {
   lastName: string;
   phone: string;
   email: string;
-  schoolId: string;
+  licenseId: string;
   sex: string;
 }
 
@@ -36,7 +36,7 @@ const RiderProfile = () => {
     lastName: "",
     phone: "",
     email: "",
-    schoolId: "",
+    licenseId: "",
     sex: "",
   });
 
@@ -48,17 +48,25 @@ const RiderProfile = () => {
     try {
       setIsLoading(true);
       const userData = await getUserProfile();
+      console.log("Fetched user profile data:", userData); // Debug log
       setProfileData({
         firstName: userData.firstName || "",
         middleName: userData.middleName || "",
         lastName: userData.lastName || "",
         phone: userData.phone || "",
         email: userData.email || "",
-        schoolId: userData.schoolId || "",
+        licenseId: userData.licenseId || "",
         sex: userData.sex || "",
+      });
+      
+      // Update the rider store with the latest user data
+      useRiderStore.getState().setUser({
+        ...useRiderStore.getState().user,
+        licenseId: userData.licenseId || "",
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
+      Alert.alert("Error", "Failed to load profile data. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -129,10 +137,10 @@ const RiderProfile = () => {
 
             <CustomInput
               label="License ID #"
-              value={profileData.schoolId}
-              onChangeText={(text: string) => handleInputChange("schoolId", text)}
-              editable={isEditing}
-              style={isEditing ? styles.inputEditable : styles.inputDisabled}
+              value={profileData.licenseId}
+              onChangeText={(text: string) => handleInputChange("licenseId", text)}
+              editable={false}
+              style={styles.inputDisabled}
             />
 
             <CustomInput

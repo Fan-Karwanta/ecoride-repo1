@@ -8,7 +8,7 @@ const userSchema = new Schema(
   {
     role: {
       type: String,
-      enum: ["customer", "rider"],
+      enum: ["customer", "rider", "admin"],
       required: true,
     },
     phone: {
@@ -59,6 +59,15 @@ const userSchema = new Schema(
       enum: ["male", "female"],
       required: false,
     },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "disapproved"],
+      default: "pending"
+    },
+    disapprovalReason: {
+      type: String,
+      default: '',
+    }
   },
   {
     timestamps: true,

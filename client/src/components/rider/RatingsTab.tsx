@@ -67,10 +67,10 @@ const RatingItem: React.FC<RatingItemProps> = ({ rating }) => {
   const formattedDate = formatDate(new Date(rating.createdAt));
   const customerName = `${rating.customer?.firstName || ''} ${rating.customer?.lastName || ''}`.trim() || 'Anonymous';
 
-  // Add null checks for ride property
-  const rideVehicle = rating.ride?.vehicle || 'Unknown';
-  const rideDistance = rating.ride?.distance || 0;
-  const rideFare = rating.ride?.fare || 0;
+  // Add null checks for ride property and its nested properties
+  const rideVehicle = rating.ride?.vehicle ? getVehicleName(rating.ride.vehicle) : 'Unknown';
+  const rideDistance = rating.ride?.distance !== undefined && rating.ride.distance !== null ? rating.ride.distance : 0;
+  const rideFare = rating.ride?.fare !== undefined && rating.ride.fare !== null ? rating.ride.fare : 0;
 
   return (
     <View style={styles.ratingItem}>
@@ -100,13 +100,18 @@ const RatingItem: React.FC<RatingItemProps> = ({ rating }) => {
         </View>
       )}
 
+      {/* Ride details section temporarily commented out due to data inconsistency issues.
+         Will be implemented properly in the future.
+      */}
+      {/*
       {rating.ride && (
         <View style={styles.rideDetails}>
           <CustomText fontFamily="Regular" fontSize={12} style={styles.rideInfoText}>
-            {getVehicleName(rideVehicle)} • {rideDistance.toFixed(1)} km • ₱{rideFare.toFixed(2)}
+            {rideVehicle} • {rideDistance > 0 ? `${rideDistance.toFixed(1)} km` : 'Unknown'} • {rideFare > 0 ? `₱${rideFare.toFixed(2)}` : 'Unknown'}
           </CustomText>
         </View>
       )}
+      */}
     </View>
   );
 };

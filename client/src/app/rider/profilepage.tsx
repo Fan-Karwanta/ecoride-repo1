@@ -17,7 +17,7 @@ interface ProfileData {
   lastName: string;
   phone: string;
   email: string;
-  schoolId: string;
+  licenseId: string;
   sex: string;
 }
 
@@ -32,7 +32,7 @@ const RiderProfilePage = () => {
     lastName: "",
     phone: "",
     email: "",
-    schoolId: "",
+    licenseId: "",
     sex: "",
   });
 
@@ -50,7 +50,7 @@ const RiderProfilePage = () => {
         lastName: userData.lastName || "",
         phone: userData.phone || "",
         email: userData.email || "",
-        schoolId: userData.schoolId || "",
+        licenseId: userData.licenseId || "",
         sex: userData.sex || "",
       });
     } catch (error) {
@@ -189,10 +189,10 @@ const RiderProfilePage = () => {
 
             <CustomInput
               label="License ID #"
-              value={profileData.schoolId}
-              onChangeText={(text: string) => handleInputChange("schoolId", text)}
-              editable={isEditing}
-              style={isEditing ? styles.inputEditable : styles.inputDisabled}
+              value={profileData.licenseId}
+              onChangeText={(text: string) => handleInputChange("licenseId", text)}
+              editable={false}
+              style={styles.inputDisabled}
             />
 
             <CustomInput
