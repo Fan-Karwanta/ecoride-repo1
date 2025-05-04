@@ -175,6 +175,30 @@ export const register = async (
     await tokenStorage.set("access_token", res.data.access_token);
     await tokenStorage.set("refresh_token", res.data.refresh_token);
 
+    // Check if the account is pending approval
+    if (res.data.status === "pending") {
+      Alert.alert(
+        "Registration Successful",
+        "Your account has been created but is pending approval. You will be redirected to the login screen.",
+        [
+          { 
+            text: "OK", 
+            onPress: async () => {
+              // Clear tokens and user data
+              const { clearData } = useUserStore.getState();
+              const { clearRiderData } = useRiderStore.getState();
+              
+              await tokenStorage.clearAll();
+              clearRiderData();
+              clearData();
+              resetAndNavigate("/role");
+            }
+          }
+        ]
+      );
+      return;
+    }
+
     if (res.data.user.role === "customer") {
       resetAndNavigate("/customer/home");
     } else {
