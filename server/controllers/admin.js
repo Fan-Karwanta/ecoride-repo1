@@ -5,34 +5,91 @@ import { BadRequestError, NotFoundError } from '../errors/index.js';
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    // Support filtering by role, status, etc.
-    const { role, approved, search } = req.query;
+    // Support filtering by role, status, sex, etc.
+    const { role, status, search, sex, userRole, vehicleType, hasDocuments } = req.query;
     const queryObject = {};
     
+    // Handle role filter
     if (role) {
       queryObject.role = role;
     }
     
-    if (approved === 'true') {
-      queryObject.approved = true;
-    } else if (approved === 'false') {
-      queryObject.approved = false;
+    // Handle status filter
+    if (status) {
+      queryObject.status = status;
     }
     
-    if (search) {
-      // Search by name, email, or phone
+    // Handle sex filter
+    if (sex) {
+      queryObject.sex = sex;
+    }
+    
+    // Handle userRole filter (for customers)
+    if (userRole) {
+      queryObject.userRole = userRole;
+    }
+    
+    // Handle vehicleType filter (for riders)
+    if (vehicleType) {
+      queryObject.vehicleType = vehicleType;
+    }
+    
+    // Handle document filter
+    if (hasDocuments === 'true') {
       queryObject.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } }
+        { photo: { $exists: true, $ne: null } },
+        { schoolIdDocument: { $exists: true, $ne: null } },
+        { staffFacultyIdDocument: { $exists: true, $ne: null } },
+        { driverLicense: { $exists: true, $ne: null } },
+        { cor: { $exists: true, $ne: null } }
+      ];
+    } else if (hasDocuments === 'false') {
+      queryObject.$and = [
+        { photo: { $in: [null, undefined, ''] } },
+        { schoolIdDocument: { $in: [null, undefined, ''] } },
+        { staffFacultyIdDocument: { $in: [null, undefined, ''] } },
+        { driverLicense: { $in: [null, undefined, ''] } },
+        { cor: { $in: [null, undefined, ''] } }
       ];
     }
     
-    console.log('Fetching users with query:', queryObject);
+    // Handle search filter
+    if (search) {
+      // If we already have $or or $and, we need to use $and to combine with search
+      const searchCondition = {
+        $or: [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } }
+        ]
+      };
+      
+      if (queryObject.$or || queryObject.$and) {
+        // Create an $and condition if it doesn't exist
+        queryObject.$and = queryObject.$and || [];
+        // Add the search condition to the $and array
+        queryObject.$and.push(searchCondition);
+        
+        // If we have an $or condition but not in $and, move it to $and
+        if (queryObject.$or && !queryObject.$and.includes(queryObject.$or)) {
+          queryObject.$and.push({ $or: queryObject.$or });
+          delete queryObject.$or;
+        }
+      } else {
+        // Simple case: just add the $or for search
+        queryObject.$or = searchCondition.$or;
+      }
+    }
+    
+    console.log('Fetching users with query:', JSON.stringify(queryObject, null, 2));
     
     // Exclude admin users from the results
-    queryObject.role = { $ne: 'admin' };
+    if (queryObject.$and) {
+      queryObject.$and.push({ role: { $ne: 'admin' } });
+    } else {
+      queryObject.role = { $ne: 'admin' };
+    }
     
     const users = await User.find(queryObject).select('-password').sort({ createdAt: -1 });
     
@@ -220,6 +277,61 @@ export const updateUser = async (req, res) => {
     
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
       message: 'Error updating user',
+      error: error.message
+    });
+  }
+};
+
+// Add penalty comment to user
+export const addPenaltyComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { penaltyComment, penaltyLiftDate } = req.body;
+    
+    if (!penaltyComment || penaltyComment.trim() === '') {
+      throw new BadRequestError('Penalty comment is required');
+    }
+    
+    if (!penaltyLiftDate) {
+      throw new BadRequestError('Penalty lift date is required');
+    }
+    
+    const user = await User.findById(id);
+    
+    if (!user) {
+      throw new NotFoundError(`No user found with id ${id}`);
+    }
+    
+    // Check if user is disapproved
+    if (user.status !== 'disapproved') {
+      throw new BadRequestError('User must be disapproved before adding a penalty');
+    }
+    
+    user.penaltyComment = penaltyComment;
+    user.penaltyLiftDate = new Date(penaltyLiftDate);
+    await user.save();
+    
+    const updatedUser = await User.findById(id).select('-password');
+    
+    res.status(StatusCodes.OK).json({
+      message: 'Penalty added successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error(`Error adding penalty comment to user ${req.params.id}:`, error);
+    
+    if (error.name === 'NotFoundError') {
+      res.status(StatusCodes.NOT_FOUND).json({ message: error.message });
+      return;
+    }
+    
+    if (error.name === 'BadRequestError') {
+      res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+      return;
+    }
+    
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
+      message: 'Error adding penalty comment',
       error: error.message
     });
   }

@@ -1,13 +1,9 @@
 import express from 'express';
 import { 
-  getAllUsers, 
-  getUserById, 
-  approveUser, 
-  disapproveUser, 
-  updateUser, 
-  deleteUser,
-  addPenaltyComment 
-} from '../controllers/admin.js';
+  getUserStats,
+  getRideStats,
+  getCombinedAnalytics
+} from '../controllers/analytics.js';
 import authenticateUser from '../middleware/authentication.js';
 
 const router = express.Router();
@@ -30,13 +26,9 @@ const isAdmin = (req, res, next) => {
 // Apply authentication and admin check to all routes
 router.use(authenticateUser, isAdmin);
 
-// User management routes
-router.get('/users', getAllUsers);
-router.get('/users/:id', getUserById);
-router.put('/users/:id/approve', approveUser);
-router.put('/users/:id/disapprove', disapproveUser);
-router.put('/users/:id/penalty', addPenaltyComment);
-router.put('/users/:id', updateUser);
-router.delete('/users/:id', deleteUser);
+// Analytics routes
+router.get('/user-stats', getUserStats);
+router.get('/ride-stats', getRideStats);
+router.get('/combined', getCombinedAnalytics);
 
 export default router;

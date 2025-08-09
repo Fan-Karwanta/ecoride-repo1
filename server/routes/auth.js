@@ -1,6 +1,7 @@
 import express from 'express';
-import { refreshToken, auth, login, register, testAuth, getUserProfile, updateUserProfile } from '../controllers/auth.js';
+import { refreshToken, auth, login, register, testAuth, getUserProfile, updateUserProfile, forgotPassword, resetPassword, verifyCode, uploadDocuments } from '../controllers/auth.js';
 import authenticateUser from '../middleware/authentication.js';
+import { upload } from '../utils/cloudinary.js';
 import User from '../models/User.js';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
@@ -14,6 +15,16 @@ router.post('/login', login); // New email/password login
 router.post('/register', register); // New registration endpoint
 router.get('/profile', authenticateUser, getUserProfile); // Get user profile
 router.put('/profile', authenticateUser, updateUserProfile); // Update user profile
+router.post('/forgot-password', forgotPassword); // Send password reset verification code
+router.post('/verify-code', verifyCode); // Verify code without resetting password
+router.post('/reset-password', resetPassword); // Verify code and reset password
+router.post('/upload-documents', upload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'schoolIdDocument', maxCount: 1 },
+  { name: 'staffFacultyIdDocument', maxCount: 1 },
+  { name: 'cor', maxCount: 1 },
+  { name: 'driverLicense', maxCount: 1 }
+]), uploadDocuments); // Upload verification documents
 
 // Special admin login endpoint
 router.post('/admin-login', async (req, res) => {

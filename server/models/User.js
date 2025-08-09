@@ -59,6 +59,38 @@ const userSchema = new Schema(
       enum: ["male", "female"],
       required: false,
     },
+    vehicleType: {
+      type: String,
+      enum: ["Single Motorcycle", "Tricycle", "Cab"],
+      required: false,
+    },
+    // Role-based verification fields
+    userRole: {
+      type: String,
+      enum: ["Student", "Faculty", "Staff"],
+      required: false,
+    },
+    // Document verification URLs
+    photo: {
+      type: String,
+      required: false,
+    },
+    schoolIdDocument: {
+      type: String,
+      required: false,
+    },
+    staffFacultyIdDocument: {
+      type: String,
+      required: false,
+    },
+    cor: {
+      type: String,
+      required: false,
+    },
+    driverLicense: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "disapproved"],
@@ -67,6 +99,22 @@ const userSchema = new Schema(
     disapprovalReason: {
       type: String,
       default: '',
+    },
+    penaltyComment: {
+      type: String,
+      default: '',
+    },
+    penaltyLiftDate: {
+      type: Date,
+      required: false,
+    },
+    resetPasswordCode: {
+      type: String,
+      required: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      required: false,
     }
   },
   {

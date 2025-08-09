@@ -1,4 +1,15 @@
 import dotenv from 'dotenv';
+
+// Load environment variables first, before any other imports
+dotenv.config();
+
+// Log environment variables for debugging (without revealing secrets)
+console.log('Environment Variables Check:', {
+  CLOUDINARY_API_NAME: process.env.CLOUDINARY_API_NAME ? 'Set' : 'Not set',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Not set',
+  CLOUDINARY_SECRET_KEY: process.env.CLOUDINARY_SECRET_KEY ? 'Set' : 'Not set',
+});
+
 import 'express-async-errors';
 import EventEmitter from 'events';
 import express from 'express';
@@ -14,11 +25,10 @@ import authRouter from './routes/auth.js';
 import rideRouter from './routes/ride.js';
 import ratingRouter from './routes/rating.js';
 import adminRouter from './routes/admin.js';
+import analyticsRouter from './routes/analytics.js';
 
 // Import socket handler
 import handleSocketConnection from './controllers/sockets.js';
-
-dotenv.config();
 
 EventEmitter.defaultMaxListeners = 20;
 
@@ -50,10 +60,11 @@ app.use((req, res, next) => {
 handleSocketConnection(io);
 
 // Routes
-app.use("/auth", authRouter);
+app.use("/api/auth", authRouter);
 app.use("/ride", authMiddleware, rideRouter);
 app.use("/rating", authMiddleware, ratingRouter);
 app.use("/admin", adminRouter);
+app.use("/api/analytics", analyticsRouter);
 
 // Middleware
 app.use(notFoundMiddleware);
